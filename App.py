@@ -632,3 +632,254 @@ st.markdown("""
         <span class="nav-icon">👤</span>
     </div>
 """, unsafe_allow_html=True)
+
+import streamlit as st
+
+# 1. Page Configuration
+st.set_page_config(page_title="Hyperverse", page_icon="🌌", layout="centered")
+
+# 2. Session State for Navigation
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = "Home"
+
+# 3. Custom CSS for Mobile Look & Dark Mode
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        header {visibility: hidden;}
+        footer {visibility: hidden;}
+        
+        .stApp { background-color: #0a0a0a; }
+        
+        .block-container {
+            max-width: 400px !important;
+            padding-top: 1rem !important;
+            padding-bottom: 6rem !important;
+            margin: auto;
+            border: 1px solid #222;
+            border-radius: 20px;
+            background-color: #000000;
+        }
+        
+        h1, h2, h3, p, span, div {
+            color: #ffffff !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        /* Top Nav */
+        .top-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0px; border-bottom: 1px solid #222; margin-bottom: 15px;
+        }
+        .top-nav h2 { margin: 0; font-size: 22px; font-weight: 700; }
+
+        /* Tabs */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 10px; background-color: #1a1a1a; padding: 5px;
+            border-radius: 20px; justify-content: center; margin-bottom: 15px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 35px; border-radius: 15px; padding: 0px 20px;
+            background-color: transparent; color: gray; font-weight: bold;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: #e1306c !important; color: white !important;
+        }
+
+        /* Chat Styles */
+        .chat-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #111; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; background-color: #333; margin-right: 15px; object-fit: cover;}
+        .chat-info { flex-grow: 1; }
+        .chat-name { font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+        .chat-msg { color: #888 !important; font-size: 13px; }
+        .blue-dot { width: 8px; height: 8px; background-color: #0095f6; border-radius: 50%; margin-left: 10px; }
+        .wa-msg { display: flex; align-items: center; color: #888 !important; font-size: 13px; }
+        .green-tick { color: #25D366; font-size: 14px; margin-right: 4px; }
+        .filter-pill { background-color: #1a1a1a; color: #ccc !important; padding: 5px 12px; border-radius: 15px; font-size: 12px; margin-right: 8px; display: inline-block;}
+        .filter-pill.active { background-color: #25D366; color: black !important; font-weight: bold; }
+
+        /* Feed Styles */
+        .feed-card { background-color: #111; border-radius: 15px; margin-bottom: 20px; overflow: hidden; border: 1px solid #222; }
+        .feed-header { display: flex; align-items: center; padding: 10px 15px; }
+        .feed-header-text { font-weight: 600; font-size: 14px; }
+        .feed-header-text span { color: #888; font-size: 12px; font-weight: normal; }
+        .feed-media { width: 100%; height: 350px; background-color: #222; object-fit: cover; }
+        .feed-actions { padding: 10px 15px; font-size: 22px; display: flex; gap: 15px; }
+        .feed-likes { padding: 0 15px; font-weight: 600; font-size: 14px; }
+        .feed-caption { padding: 5px 15px 15px 15px; font-size: 14px; }
+
+        /* Profile Styles */
+        .profile-header { text-align: center; padding: 20px 0; }
+        .profile-avatar { width: 90px; height: 90px; border-radius: 50%; border: 3px solid #e1306c; margin-bottom: 15px; }
+        .profile-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 18px; font-weight: bold; display: block; }
+        .stat-label { font-size: 12px; color: #888 !important; }
+        .profile-bio { font-size: 14px; padding: 0 20px; margin-bottom: 20px; }
+        .grid-img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 5px; }
+
+        /* Interactive Bottom Nav Buttons */
+        .stButton > button {
+            background-color: transparent !important;
+            border: none !important;
+            color: white !important;
+            font-size: 20px !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+        .stButton > button:hover { color: #e1306c !important; }
+        
+        /* Bottom Nav Container */
+        div[data-testid="stHorizontalBlock"] {
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 400px; 
+            background-color: #000000; 
+            border-top: 1px solid #222; 
+            padding: 10px 0px;
+            z-index: 999;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# ==========================================
+# HEADER
+# ==========================================
+if st.session_state.current_page == "Home":
+    st.markdown("""
+        <div class="top-nav">
+            <h2>Hyperverse</h2>
+            <div style="font-size: 20px; cursor: pointer;">✏️</div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ==========================================
+# PAGE CONTENT
+# ==========================================
+
+# --- HOME PAGE (Chat & Preview) ---
+if st.session_state.current_page == "Home":
+    tab1, tab2 = st.tabs(["💬 Chat", "▶️ Preview"])
+
+    with tab1:
+        # (Existing Chat UI)
+        st.markdown("<div style='font-size: 14px; color: gray; margin-bottom: 5px;'>Notes</div>", unsafe_allow_html=True)
+        st.markdown("""
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <div style="text-align: center;"><img src="https://i.pravatar.cc/150?img=11" class="avatar" style="border: 2px solid #555;"><div style="font-size: 11px; margin-top: 5px;">Your note</div></div>
+                <div style="text-align: center;"><img src="https://i.pravatar.cc/150?img=5" class="avatar" style="border: 2px solid #e1306c;"><div style="font-size: 11px; margin-top: 5px;">Dvi</div></div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<div style='display: flex; justify-content: space-between;'><h3>Messages</h3><span style='color: #0095f6; font-size: 14px;'>Requests</span></div>", unsafe_allow_html=True)
+        st.markdown("""
+            <div class="chat-row">
+                <img src="https://i.pravatar.cc/150?img=33" class="avatar">
+                <div class="chat-info">
+                    <div class="chat-name">alex_dev <span style="color:gray; font-size:11px;">· 12h</span></div>
+                    <div class="chat-msg">Sent 4+ new messages</div>
+                </div>
+                <div class="blue-dot"></div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("<br><hr style='border-color: #333;'><br>", unsafe_allow_html=True)
+        st.markdown("<h3>Hyper Chat</h3>", unsafe_allow_html=True)
+        st.markdown("""
+            <div style="margin-bottom: 15px;">
+                <span class="filter-pill active">All</span>
+                <span class="filter-pill">Unread 21</span>
+            </div>
+            <div class="chat-row">
+                <img src="https://i.pravatar.cc/150?img=60" class="avatar">
+                <div class="chat-info">
+                    <div class="chat-name">mike_tyson <span style="float:right; color:gray; font-size:11px;">11:42 AM</span></div>
+                    <div class="wa-msg"><span class="green-tick">✓✓</span> Sent the project files</div>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with tab2:
+        # (Existing Feed UI)
+        st.markdown("""
+            <div class="feed-card">
+                <div class="feed-header">
+                    <img src="https://i.pravatar.cc/150?img=33" class="avatar">
+                    <div class="feed-header-text">aria.codes <span>· 34m</span></div>
+                </div>
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop" class="feed-media">
+                <div class="feed-actions"><span>❤️</span> <span>💬</span> <span>✈️</span></div>
+                <div class="feed-likes">1,245 likes</div>
+                <div class="feed-caption"><b>aria.codes</b> Building the future of social media. 🚀</div>
+            </div>
+        """, unsafe_allow_html=True)
+
+
+# --- PROFILE PAGE ---
+elif st.session_state.current_page == "Profile":
+    st.markdown("<h2 style='text-align: center; border-bottom: 1px solid #222; padding-bottom: 10px;'>bharat_1297</h2>", unsafe_allow_html=True)
+    
+    st.markdown("""
+        <div class="profile-header">
+            <img src="https://i.pravatar.cc/150?img=11" class="profile-avatar">
+            <h3 style="margin: 0;">Bharat Kumar</h3>
+            <p style="color: #888 !important; font-size: 14px;">@bharat_1297</p>
+            
+            <div class="profile-stats">
+                <div class="stat-item"><span class="stat-value">120</span><span class="stat-label">Posts</span></div>
+                <div class="stat-item"><span class="stat-value">15.4K</span><span class="stat-label">Followers</span></div>
+                <div class="stat-item"><span class="stat-value">340</span><span class="stat-label">Following</span></div>
+            </div>
+            
+            <div class="profile-bio">
+                Building Hyperverse App 🌌 | Tech Enthusiast | UI/UX Designer
+            </div>
+        </div>
+        <hr style='border-color: #222;'>
+        <h4 style="margin-bottom: 10px;">My Posts</h4>
+    """, unsafe_allow_html=True)
+    
+    # Grid of Images (Placeholder for Posts)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.markdown("<img src='https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<img src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<img src='https://images.unsplash.com/photo-1511556820780-d912e42b4980?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+
+# --- SEARCH PAGE ---
+elif st.session_state.current_page == "Search":
+    st.markdown("<h2 style='text-align: center;'>Search</h2>", unsafe_allow_html=True)
+    st.text_input("Search users, reels, or music...", placeholder="Search...")
+    st.info("Trending searches coming soon!")
+
+
+# ==========================================
+# BOTTOM NAVIGATION (Interactive)
+# ==========================================
+st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True) # Spacer
+
+col1, col2, col3, col4, col5 = st.columns(5)
+
+with col1:
+    if st.button("🏠", key="nav_home", use_container_width=True):
+        st.session_state.current_page = "Home"
+        st.rerun()
+
+with col2:
+    if st.button("🔍", key="nav_search", use_container_width=True):
+        st.session_state.current_page = "Search"
+        st.rerun()
+
+with col3:
+    if st.button("➕", key="nav_create", use_container_width=True):
+        st.toast("Create feature coming soon!")
+
+with col4:
+    if st.button("🎬", key="nav_reels", use_container_width=True):
+        st.toast("Reels feature coming soon!")
+
+with col5:
+    if st.button("👤", key="nav_profile", use_container_width=True):
+        st.session_state.current_page = "Profile"
+        st.rerun()
