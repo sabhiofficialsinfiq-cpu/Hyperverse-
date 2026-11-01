@@ -1892,3 +1892,272 @@ else:
         if st.button("🎬", key="nav_reels"): st.toast("Reels feature coming soon!")
     with col5:
         if st.button("👤", key="nav_profile"): st.session_state.current_page = "Profile"; st.rerun()
+import streamlit as st
+
+# 1. Page Configuration
+st.set_page_config(page_title="Hyperverse", page_icon="🌌", layout="centered")
+
+# 2. Session State Management
+if 'current_page' not in st.session_state:
+    st.session_state.current_page = "Home"
+if 'active_chat' not in st.session_state:
+    st.session_state.active_chat = None
+if 'theme' not in st.session_state:
+    st.session_state.theme = "Dark"
+
+# 3. Dynamic Theme Colors
+if st.session_state.theme == "Dark":
+    bg_color = "#0a0a0a"; container_color = "#000000"; text_color = "#ffffff"
+    border_color = "#222222"; input_bg = "#1a1a1a"; gray_text = "#888888"
+else:
+    bg_color = "#f0f2f6"; container_color = "#ffffff"; text_color = "#000000"
+    border_color = "#e0e0e0"; input_bg = "#f9f9f9"; gray_text = "#666666"
+
+# 4. Custom CSS
+st.markdown(f"""
+    <style>
+        #MainMenu {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        .stApp {{ background-color: {bg_color}; }}
+        .block-container {{
+            max-width: 400px !important; padding-top: 1rem !important;
+            padding-bottom: 6rem !important; margin: auto;
+            border: 1px solid {border_color}; border-radius: 20px;
+            background-color: {container_color}; transition: all 0.3s ease;
+        }}
+        h1, h2, h3, h4, p, span, div, label {{
+            color: {text_color} !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }}
+        .top-nav {{
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 0px; border-bottom: 1px solid {border_color}; margin-bottom: 15px;
+        }}
+        .top-nav h2 {{ margin: 0; font-size: 22px; font-weight: 700; }}
+        .stTabs [data-baseweb="tab-list"] {{
+            gap: 10px; background-color: {input_bg}; padding: 5px;
+            border-radius: 20px; justify-content: center; margin-bottom: 15px;
+        }}
+        .stTabs [data-baseweb="tab"] {{
+            height: 35px; border-radius: 15px; padding: 0px 20px;
+            background-color: transparent; color: gray; font-weight: bold;
+        }}
+        .stTabs [aria-selected="true"] {{ background-color: #e1306c !important; color: white !important; }}
+        .chat-row {{ display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid {border_color}; }}
+        .avatar {{ width: 50px; height: 50px; border-radius: 50%; background-color: #333; margin-right: 15px; object-fit: cover;}}
+        .chat-info {{ flex-grow: 1; }}
+        .chat-name {{ font-weight: 600; font-size: 15px; margin-bottom: 3px; }}
+        .chat-msg {{ color: {gray_text} !important; font-size: 13px; }}
+        .blue-dot {{ width: 8px; height: 8px; background-color: #0095f6; border-radius: 50%; margin-left: 10px; }}
+        .wa-msg {{ display: flex; align-items: center; color: {gray_text} !important; font-size: 13px; }}
+        .green-tick {{ color: #25D366; font-size: 14px; margin-right: 4px; }}
+        .filter-pill {{ background-color: {input_bg}; color: {text_color} !important; padding: 5px 12px; border-radius: 15px; font-size: 12px; margin-right: 8px; display: inline-block;}}
+        .filter-pill.active {{ background-color: #25D366; color: black !important; font-weight: bold; }}
+        .feed-card {{ background-color: {input_bg}; border-radius: 15px; margin-bottom: 20px; overflow: hidden; border: 1px solid {border_color}; }}
+        .feed-header {{ display: flex; align-items: center; padding: 10px 15px; }}
+        .feed-header-text {{ font-weight: 600; font-size: 14px; }}
+        .feed-header-text span {{ color: {gray_text}; font-size: 12px; font-weight: normal; }}
+        .feed-media {{ width: 100%; height: 350px; background-color: #222; object-fit: cover; }}
+        .feed-actions {{ padding: 10px 15px; font-size: 22px; display: flex; gap: 15px; }}
+        .feed-likes {{ padding: 0 15px; font-weight: 600; font-size: 14px; }}
+        .feed-caption {{ padding: 5px 15px 15px 15px; font-size: 14px; }}
+        .profile-header {{ text-align: center; padding: 20px 0; }}
+        .profile-avatar {{ width: 90px; height: 90px; border-radius: 50%; border: 3px solid #e1306c; margin-bottom: 15px; }}
+        .profile-stats {{ display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; }}
+        .stat-item {{ text-align: center; }}
+        .stat-value {{ font-size: 18px; font-weight: bold; display: block; }}
+        .stat-label {{ font-size: 12px; color: {gray_text} !important; }}
+        .profile-bio {{ font-size: 14px; padding: 0 20px; margin-bottom: 20px; }}
+        .grid-img {{ width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 5px; }}
+        .create-option {{ background-color: {input_bg}; border: 1px solid {border_color}; border-radius: 15px; padding: 20px; text-align: center; margin-bottom: 15px; cursor: pointer; }}
+        .create-icon {{ font-size: 30px; margin-bottom: 10px; display: block; }}
+        .create-title {{ font-weight: bold; font-size: 16px; }}
+        .settings-item {{
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 0; border-bottom: 1px solid {border_color}; font-size: 16px; cursor: pointer;
+        }}
+        .settings-item-left {{ display: flex; align-items: center; gap: 15px; }}
+        .settings-icon {{ font-size: 20px; }}
+        .stButton > button {{
+            background-color: transparent !important; border: none !important;
+            color: {text_color} !important; font-size: 20px !important;
+            padding: 0 !important; box-shadow: none !important; text-align: left;
+        }}
+        .stButton > button:hover {{ color: #e1306c !important; }}
+        div[data-testid="stHorizontalBlock"] {{
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 400px; background-color: {container_color};
+            border-top: 1px solid {border_color}; padding: 10px 0px; z-index: 999;
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
+# ==========================================
+# CONDITION 1: DIRECT CHAT SCREEN
+# ==========================================
+if st.session_state.active_chat is not None:
+    chat_user = st.session_state.active_chat
+    col_back, col_title = st.columns([1, 4])
+    with col_back:
+        if st.button("⬅️", key="back_btn_chat"):
+            st.session_state.active_chat = None
+            st.rerun()
+    with col_title:
+        st.markdown(f"<div class='chat-name' style='font-size:18px;'>{chat_user}</div>", unsafe_allow_html=True)
+    st.markdown("---")
+    
+    if "alex_dev" in chat_user:
+        with st.chat_message("user"): st.write("Hey! Are we still on for the meeting?")
+        with st.chat_message("assistant"): st.write("Yes, absolutely. I'll send the link in a bit.")
+    else:
+        with st.chat_message("user"): st.write("Sent the project files.")
+        with st.chat_message("assistant"): st.write("Got them. Reviewing now.")
+        
+    if prompt := st.chat_input("Type a message...", key="chat_input_main"):
+        with st.chat_message("user"): st.write(prompt)
+        with st.chat_message("assistant"): st.write("This is an automated reply.")
+
+# ==========================================
+# CONDITION 2: SETTINGS PAGE
+# ==========================================
+elif st.session_state.current_page == "Settings":
+    col_back, col_title = st.columns([1, 4])
+    with col_back:
+        if st.button("⬅️", key="back_btn_settings"):
+            st.session_state.current_page = "Profile"
+            st.rerun()
+    with col_title:
+        st.markdown("<div class='chat-name' style='font-size:18px;'>Settings and activity</div>", unsafe_allow_html=True)
+    
+    st.write("<br>", unsafe_allow_html=True)
+    st.write("**App Appearance**")
+    theme_choice = st.radio("Select Theme", ["Dark", "Light"], index=0 if st.session_state.theme == "Dark" else 1, horizontal=True, key="theme_radio")
+    if theme_choice != st.session_state.theme:
+        st.session_state.theme = theme_choice
+        st.rerun()
+        
+    st.markdown("---")
+    st.markdown("""
+        <div class="settings-item"><div class="settings-item-left"><span class="settings-icon">👤</span> Your account</div><div>></div></div>
+        <div class="settings-item"><div class="settings-item-left"><span class="settings-icon">⚙️</span> Accounts Center</div><div>></div></div>
+        <div class="settings-item"><div class="settings-item-left"><span class="settings-icon">🔖</span> Saved</div><div>></div></div>
+        <div class="settings-item"><div class="settings-item-left"><span class="settings-icon">📊</span> Your activity</div><div>></div></div>
+        <div class="settings-item"><div class="settings-item-left"><span class="settings-icon">🔔</span> Notifications</div><div>></div></div>
+        <div class="settings-item"><div class="settings-item-left"><span class="settings-icon">⏱️</span> Time management</div><div>></div></div>
+    """, unsafe_allow_html=True)
+    
+    st.write("<br><br>", unsafe_allow_html=True)
+    st.button("Log Out", use_container_width=True, key="logout_btn")
+
+# ==========================================
+# CONDITION 3: NORMAL APP NAVIGATION
+# ==========================================
+else:
+    if st.session_state.current_page == "Home":
+        st.markdown(f"""<div class="top-nav"><h2>Hyperverse</h2><div style="font-size: 20px; cursor: pointer;">✏️</div></div>""", unsafe_allow_html=True)
+    elif st.session_state.current_page == "Create":
+        st.markdown(f"<h2 style='text-align: center; border-bottom: 1px solid {border_color}; padding-bottom: 10px;'>New Post</h2>", unsafe_allow_html=True)
+    elif st.session_state.current_page == "Discover":
+        st.markdown(f"<h2 style='text-align: center; border-bottom: 1px solid {border_color}; padding-bottom: 10px;'>Discover</h2>", unsafe_allow_html=True)
+    elif st.session_state.current_page == "Profile":
+        col_title, col_gear = st.columns([4, 1])
+        with col_title:
+            st.markdown("<h2 style='text-align: left;'>bharat_1297</h2>", unsafe_allow_html=True)
+        with col_gear:
+            if st.button("⚙️", key="go_to_settings_btn"):
+                st.session_state.current_page = "Settings"
+                st.rerun()
+
+    if st.session_state.current_page == "Home":
+        tab1, tab2 = st.tabs(["💬 Chat", "▶️ Preview"])
+        with tab1:
+            st.markdown(f"<div style='font-size: 14px; color: {gray_text}; margin-bottom: 5px;'>Notes</div>", unsafe_allow_html=True)
+            st.markdown(f"""
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div style="text-align: center;"><img src="https://i.pravatar.cc/150?img=11" class="avatar" style="border: 2px solid {border_color};"><div style="font-size: 11px; margin-top: 5px;">Your note</div></div>
+                    <div style="text-align: center;"><img src="https://i.pravatar.cc/150?img=5" class="avatar" style="border: 2px solid #e1306c;"><div style="font-size: 11px; margin-top: 5px;">Dvi</div></div>
+                </div>
+            """, unsafe_allow_html=True)
+            st.markdown("<div style='display: flex; justify-content: space-between;'><h3>Messages</h3><span style='color: #0095f6; font-size: 14px;'>Requests</span></div>", unsafe_allow_html=True)
+            if st.button("👤 alex_dev\nSent 4+ new messages · 12h", key="chat_alex_btn"):
+                st.session_state.active_chat = "alex_dev"
+                st.rerun()
+
+            st.markdown("<br><hr style='border-color: #333;'><br>", unsafe_allow_html=True)
+            st.markdown("<h3>Hyper Chat</h3>", unsafe_allow_html=True)
+            st.markdown(f"""<div style="margin-bottom: 15px;"><span class="filter-pill active">All</span><span class="filter-pill">Unread 21</span></div>""", unsafe_allow_html=True)
+            if st.button("👤 mike_tyson\n✓✓ Sent the project files · 11:42 AM", key="chat_mike_btn"):
+                st.session_state.active_chat = "mike_tyson"
+                st.rerun()
+
+        with tab2:
+            st.markdown(f"""
+                <div class="feed-card">
+                    <div class="feed-header"><img src="https://i.pravatar.cc/150?img=33" class="avatar"><div class="feed-header-text">aria.codes <span>· 34m</span></div></div>
+                    <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop" class="feed-media">
+                    <div class="feed-actions"><span>❤️</span> <span>💬</span> <span>✈️</span></div>
+                    <div class="feed-likes">1,245 likes</div>
+                    <div class="feed-caption"><b>aria.codes</b> Building the future of social media. 🚀</div>
+                </div>
+            """, unsafe_allow_html=True)
+
+    elif st.session_state.current_page == "Create":
+        st.write("Choose what you want to create:")
+        col1, col2 = st.columns(2)
+        with col1: st.markdown(f"<div class='create-option'><span class='create-icon'>🖼️</span><span class='create-title'>New Post</span></div>", unsafe_allow_html=True)
+        with col2: st.markdown(f"<div class='create-option'><span class='create-icon'>🎬</span><span class='create-title'>Reel</span></div>", unsafe_allow_html=True)
+        col3, col4 = st.columns(2)
+        with col3: st.markdown(f"<div class='create-option'><span class='create-icon'>📸</span><span class='create-title'>Story</span></div>", unsafe_allow_html=True)
+        with col4: st.markdown(f"<div class='create-option'><span class='create-icon'>🔴</span><span class='create-title'>Live</span></div>", unsafe_allow_html=True)
+        st.write("---")
+        uploaded_file = st.file_uploader("Upload from album", type=['png', 'jpg', 'jpeg', 'mp4'], key="create_file_uploader")
+        st.text_area("Write a caption...", placeholder="What's on your mind?", key="create_caption_area")
+        if st.button("Share Post", type="primary", use_container_width=True, key="share_post_btn"):
+            st.success("Post Shared Successfully!")
+
+    elif st.session_state.current_page == "Discover":
+        st.markdown(f"<div style='margin-bottom: 15px;'><span class='filter-pill active'>Explore</span><span class='filter-pill'>Following</span><span class='filter-pill'>Nearby</span></div>", unsafe_allow_html=True)
+        st.text_input("Search users, reels, or music...", placeholder="Search...", key="search_input")
+        st.write("### Explore")
+        c1, c2, c3 = st.columns(3)
+        with c1: st.markdown("<img src='https://images.unsplash.com/photo-1511556820780-d912e42b4980?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+        with c2: st.markdown("<img src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+        with c3: st.markdown("<img src='https://images.unsplash.com/photo-1472214103451-9374bd1c798e?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+
+    elif st.session_state.current_page == "Profile":
+        st.markdown(f"""
+            <div class="profile-header">
+                <img src="https://i.pravatar.cc/150?img=11" class="profile-avatar">
+                <h3 style="margin: 0;">Bharat Kumar</h3>
+                <p style="color: {gray_text} !important; font-size: 14px;">@bharat_1297</p>
+                <div class="profile-stats">
+                    <div class="stat-item"><span class="stat-value">120</span><span class="stat-label">Posts</span></div>
+                    <div class="stat-item"><span class="stat-value">15.4K</span><span class="stat-label">Followers</span></div>
+                    <div class="stat-item"><span class="stat-value">340</span><span class="stat-label">Following</span></div>
+                </div>
+                <div class="profile-bio">Building Hyperverse App 🌌 | Tech Enthusiast</div>
+            </div>
+            <hr style='border-color: {border_color};'><h4>My Posts</h4>
+        """, unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+        with col1: st.markdown("<img src='https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+        with col2: st.markdown("<img src='https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+        with col3: st.markdown("<img src='https://images.unsplash.com/photo-1511556820780-d912e42b4980?q=80&w=200&auto=format&fit=crop' class='grid-img'>", unsafe_allow_html=True)
+
+    # ==========================================
+    # BOTTOM NAVIGATION
+    # ==========================================
+    st.markdown("<div style='height: 60px;'></div>", unsafe_allow_html=True)
+    col1, col2, col3, col4, col5 = st.columns(5)
+
+    with col1:
+        if st.button("🏠", key="nav_home_btn"): st.session_state.current_page = "Home"; st.rerun()
+    with col2:
+        if st.button("🔍", key="nav_search_btn"): st.session_state.current_page = "Discover"; st.rerun()
+    with col3:
+        if st.button("➕", key="nav_create_btn"): st.session_state.current_page = "Create"; st.rerun()
+    with col4:
+        if st.button("🎬", key="nav_reels_btn"): st.toast("Reels feature coming soon!")
+    with col5:
+        if st.button("👤", key="nav_profile_btn"): st.session_state.current_page = "Profile"; st.rerun()
