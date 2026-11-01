@@ -2161,3 +2161,5 @@ else:
         if st.button("🎬", key="nav_reels_btn"): st.toast("Reels feature coming soon!")
     with col5:
         if st.button("👤", key="nav_profile_btn"): st.session_state.current_page = "Profile"; st.rerun()
+for i, chat in enumerate(chats):
+    st.button(chat["name"], key=f"chat_{i}_{chat['name']}")
